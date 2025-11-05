@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>𝗘𝗮𝘀𝘆 𝗜𝗻𝗰𝗼𝗺𝗲-💸 সহজ উপার্জন 💸</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
+    
+    <script src="https://ad.gigapub.tech/script?id=3965"></script>
+    <script src="https://adexora.com/cdn/ads.js?id=783"></script>
+
+    <style>
+        :root {
+            --primary-bg: #0D0D0D;
+            --secondary-bg: #1A1A1A;
+            --card-bg: #1F1F1F;
+            --border-color: #2D2D2D;
+            
+            --primary-blue: #00A3FF;
+            --light-blue: #30BCFF;
+            --primary-green: #10B981;
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A0A0;
+            --text-dark: #111827;
+
+            --gradient-blue: linear-gradient(90deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            --gradient-green: linear-gradient(90deg, #10B981 0%, #34D399 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Loading Overlay --- */
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary-bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+        .loading-content {
+            text-align: center;
+            padding: 20px;
+        }
+        .loading-icon {
+            width: 70px; height: 70px;
+            background: var(--gradient-blue);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .loading-icon svg { width: 32px; height: 32px; color: white; }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 163, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 163, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 163, 255, 0); }
+        }
+        .loading-content h2 { font-size: 18px; margin-bottom: 8px; }
+        .loading-content p { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+        .progress-bar {
+            width: 150px; height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-inner {
+            width: 40%; height: 100%;
+            background: var(--gradient-blue);
+            position: absolute;
+            animation: loading-progress 1.5s infinite linear;
+        }
+        @keyframes loading-progress {
+            0% { left: -40%; }
+            100% { left: 100%; }
+        }
+
+        /* --- Pages --- */
+        .page {
+            display: none;
+            padding: 20px;
+            padding-bottom: 100px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .page.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- General Card Style --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* --- Buttons --- */
+        .btn {
+            border: none; padding: 14px 20px; border-radius: 12px;
+            font-size: 16px; font-weight: 600;
+            cursor: pointer; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: all 0.2s ease;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        .btn-primary { background: var(--gradient-blue); color: white; }
+        .btn-green { background: var(--gradient-green); color: white; }
+        .btn-secondary { background: var(--secondary-bg); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn:hover { transform: scale(1.02); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: scale(1); }
+
+        /* --- Home Page --- */
+        .profile-header { text-align: center; margin-bottom: 25px; }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-blue); margin-bottom: 12px; }
+        .profile-name { font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .profile-name .verified-icon { color: var(--primary-blue); }
+        .balance-btn {
+            background: var(--gradient-blue);
+            padding: 10px 20px; border-radius: 25px;
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 15px; font-weight: 600; font-size: 16px;
+            box-shadow: 0 4px 20px rgba(0, 163, 255, 0.2);
+        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center; }
+        .stat-item { background: var(--secondary-bg); padding: 15px; border-radius: 12px; }
+        .stat-icon { font-size: 24px; color: var(--primary-blue); margin-bottom: 8px; }
+        .stat-item h4 { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; }
+        .stat-item p { font-size: 18px; font-weight: 700; }
+        .refer-card .card-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--primary-blue); }
+        .refer-card .card-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
+        .referral-link-box {
+            background: var(--primary-bg); padding: 12px; border-radius: 8px;
+            font-size: 14px; color: var(--text-secondary);
+            margin: 15px 0; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        .referral-link-box span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .referral-link-box .copy-icon { cursor: pointer; color: var(--primary-blue); flex-shrink: 0; margin-left: 10px;}
+        .refer-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* --- Tasks Page --- */
+        .task-card { margin-bottom: 15px; padding: 15px; text-align: center; }
+        .task-icon-lg { font-size: 32px; color: var(--primary-blue); margin-bottom: 10px; }
+        .task-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .task-card p { color: var(--text-secondary); font-size: 14px; margin-bottom: 10px; }
+        .task-card .reward { display: inline-flex; align-items: center; gap: 6px; color: var(--primary-green); font-weight: 600; margin-bottom: 15px; }
+        .task-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        /* --- Withdraw Page --- */
+        .wallet-header { text-align: center; margin-bottom: 25px; }
+        .wallet-balance-label { font-size: 14px; color: var(--text-secondary); }
+        .wallet-balance-amount { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .info-box {
+            background: rgba(0, 163, 255, 0.1);
+            border: 1px solid var(--primary-blue);
+            padding: 15px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .info-box p { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .info-box p:first-child { margin-bottom: 10px; }
+        .info-box span { color: var(--primary-blue); font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px;
+            background: var(--secondary-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; color: var(--text-primary); font-size: 15px;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-blue); outline: none; }
+
+        /* --- History Page --- */
+        .history-item {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .history-details h4 { font-size: 16px; margin-bottom: 5px; }
+        .history-details p { font-size: 12px; color: var(--text-secondary); }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pending { background-color: #f59e0b; color: white; }
+        .status-approved { background-color: #10b981; color: white; }
+        .status-rejected { background-color: #ef4444; color: white; }
+
+        /* --- Support Page --- */
+        .support-header { text-align: center; margin-bottom: 25px; }
+        .support-header h2 { font-size: 24px; font-weight: 700; }
+        .support-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .support-link-item {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 20px; text-align: center;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .support-link-item:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
+        .support-link-item .icon { font-size: 28px; color: var(--primary-blue); margin-bottom: 12px; }
+        .support-link-item h4 { font-size: 15px; font-weight: 600; }
+        .support-link-item p { font-size: 12px; color: var(--text-secondary); }
+
+        /* --- Bottom Navigation --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; max-width: 420px;
+            background: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around;
+            padding: 10px 0; z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; cursor: pointer; color: var(--text-secondary);
+            font-size: 12px; font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item svg { width: 24px; height: 24px; }
+
+        /* --- Custom Alert/Popup --- */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .popup-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 25px;
+            max-width: 320px; width: 90%;
+            text-align: center;
+            animation: popup-scale 0.3s ease-out;
+        }
+        @keyframes popup-scale {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .popup-icon { font-size: 32px; color: var(--primary-blue); margin-bottom: 15px; }
+        .popup-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .popup-message { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 25px; text-align: left; }
+        .popup-message ul { list-style-position: inside; }
+        .popup-message li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    
+    <div id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-icon">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10.58,1.44L2.5,12.79c-0.37,0.52-0.03,1.21,0.61,1.21h5.39v7.56c0,0.55,0.45,1,1,1h3c0.55,0,1-0.45,1-1v-7.56h5.39 c0.64,0,0.98-0.69,0.61-1.21L13.42,1.44C13.06,0.92,12.2,0.6,11.5,1.1C11.09,1.03,10.79,1.18,10.58,1.44z"></path></svg>
+            </div>
+            <h2>Loading your dashboard...</h2>
+            <p>Securely syncing profile & config</p>
+            <div class="progress-bar"><div class="progress-bar-inner"></div></div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <!-- HOME PAGE -->
+        <div id="homePage" class="page active">
+            <div class="profile-header">
+                <img id="homeProfilePic" src="" alt="Profile" class="profile-pic">
+                <h2 id="homeProfileName" class="profile-name">
+                    Loading...
+                    <svg class="verified-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-3.5-3.5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
+                </h2>
+                <div class="balance-btn">
+                    ব্যালেন্স: <span id="homeBalanceAmount">0.00</span> TAKA 💰
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-icon">📺</div>
+                    <h4>দৈনিক বিজ্ঞাপন দেখা</h4>
+                    <p id="homeDailyTasks">0/0</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">👥</div>
+                    <h4>মোট রেফার</h4>
+                    <p id="homeTotalReferrals">0</p>
+                </div>
+            </div>
+
+            <div class="card refer-card" style="margin-top: 20px;">
+                <h3 class="card-title">বন্ধুকে রেফার করুন এবং আয় করুন</h3>
+                <p class="card-desc" id="referralBonusText">আপনার রেফার লিঙকটি শেয়ার করুন এবং বোনাস পান!</p>
+                <div class="referral-link-box">
+                    <span id="userReferralLink">Loading...</span>
+                    <svg id="copyReferralLinkBtn" class="copy-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>
+                </div>
+                <div class="refer-buttons">
+                    <button class="btn btn-secondary" id="copyReferralBtn">লিঙ্ক কপি করুন</button>
+                    <button class="btn btn-green" id="shareOnTelegramBtn">শেয়ার করুন</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TASKS PAGE -->
+        <div id="tasksPage" class="page">
+            <div class="card task-card" id="standardAdTask">
+                <div class="task-icon-lg">📺</div>
+                <h3>বিজ্ঞাপন দেখুন</h3>
+                <div class="reward">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM12 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"></path></svg>
+                    রিওয়ার্ড: <span id="standardAdPoints">0</span> TAKA
+                </div>
+                <button class="btn btn-primary" id="startTaskBtn">বিজ্ঞাপন দেখুন</button>
+            </div>
+            
+            <div id="dynamicTasksList"></div>
+        </div>
+
+        <!-- WITHDRAW PAGE -->
+        <div id="withdrawPage" class="page">
+            <div class="wallet-header">
+                <p class="wallet-balance-label">আপনার ব্যালেন্স</p>
+                <h1 class="wallet-balance-amount" id="withdrawCurrentBalance">0.00 TAKA</h1>
+            </div>
+
+            <div class="info-box">
+                <p>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path></svg>
+                    ন্যূনতম উত্তোলনযোগ্য Amount: <span id="minWithdrawAmountText">0</span>
+                </p>
+                <p>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
+                    ন্যূনতম রেফারেল প্রয়োজন: <span id="minReferralText">0 জন</span>
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label for="paymentMethod">পদ্ধতি নির্বাচন করুন</label>
+                <select id="paymentMethod"></select>
+            </div>
+            <div class="form-group">
+                <label for="paymentAddress">একউন্ট নম্বর</label>
+                <input type="text" id="paymentAddress" placeholder="e.g., 01XXXXXXXXX">
+            </div>
+            <div class="form-group">
+                <label for="withdrawAmount">Amount (TAKA)</label>
+                <input type="number" id="withdrawAmount" placeholder="e.g., 1200">
+            </div>
+
+            <button class="btn btn-primary" id="submitWithdrawBtn" style="margin-top: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                রিকোয়েস্ট জমা দিন
+            </button>
+        </div>
+
+        <!-- SUPPORT PAGE -->
+        <div id="supportPage" class="page">
+             <div class="support-header">
+                <h2>সাপোর্ট সেন্টার</h2>
+            </div>
+            <div class="card" id="tutorialCard">
+                 <div class="task-icon-lg">▶️</div>
+                <h3>টিউটোরিয়াল ভিডিও</h3>
+                <p class="card-desc">কিভাবে অ্যাপটি ব্যবহার করবেন—টিউটোরিয়াল ভিডিও দেখে নিন এবং সহজেই আয় শুরু করুন।</p>
+                <button class="btn btn-primary" id="tutorialBtn">টিউটোরিয়াল দেখুন</button>
+            </div>
+            <h3 style="text-align: center; margin-bottom: 15px; color: var(--text-secondary);">অন্যান্য সাহায্য</h3>
+            <div id="supportLinksGrid" class="support-links-grid"></div>
+        </div>
+        
+        <!-- HISTORY PAGE -->
+        <div id="historyPage" class="page">
+             <div class="support-header">
+                <h2>উইথড্র হিস্টরি</h2>
+            </div>
+            <ul id="withdrawHistoryList" style="list-style: none;"></ul>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="homePage">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+            <span>হোম</span>
+        </div>
+        <div class="nav-item" data-page="tasksPage">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 7h-9v-2h9v2zm0 4h-9v-2h9v2zm0 4h-9v-2h9v2zm-11 4H2V5h9v14zm-2-1.5h5V6.5H9v9.5z"></path></svg>
+            <span>টাস্ক</span>
+        </div>
+        <div class="nav-item" data-page="withdrawPage">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.18 9.82l-3.36 1.68c-.16.08-.22.28-.14.44l1.09 2.18c.08.16.02.36-.14.44l-3.36 1.68c-.16.08-.36.02-.44-.14l-1.09-2.18c-.08-.16-.28-.22-.44-.14l-3.36 1.68c-.16.08-.22.28-.14.44l1.09 2.18c.08.16.02.36-.14.44L7.04 20.7c-.16.08-.36.02-.44-.14L5.51 18.4c-.08-.16-.28-.22-.44-.14L1.71 19.94c-.16.08-.36.02-.44-.14l-.79-1.58c-.08-.16-.02-.36.14-.44l3.36-1.68c.16-.08.22-.28.14-.44L3.04 13.5c-.08-.16-.02-.36.14-.44l3.36-1.68c.16-.08.36-.02.44.14l1.09 2.18c.08.16.28.22.44.14l3.36-1.68c.16-.08.22-.28.14-.44L10.92 9.4c-.08-.16-.02-.36.14-.44l3.36-1.68c.16-.08.36-.02.44.14l1.09 2.18c.08.16.28.22.44.14l3.36-1.68c.16-.08.36.02.44.14l.79 1.58c.08.16.02.36-.14.44zM18 6c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"></path></svg>
+            <span>উইথড্র</span>
+        </div>
+        <div class="nav-item" data-page="historyPage">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
+            <span>হিস্টরি</span>
+        </div>
+        <div class="nav-item" data-page="supportPage">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 11.01L12.06 2.06c-.78-.78-2.05-.78-2.83 0l-8.95 8.95c-.78.78-.78 2.05 0 2.83L9.22 22.8c.78.78 2.05.78 2.83 0l8.95-8.95c.79-.78.79-2.05.01-2.84zM13 18h-2v-2h2v2zm0-4h-2V9h2v5z"></path></svg>
+            <span>সাপোর্ট</span>
+        </div>
+    </div>
+    
+    <!-- Custom Popups/Alerts -->
+    <div class="popup-overlay" id="customAlertOverlay">
+        <div class="popup-card">
+            <div class="popup-icon" id="customAlertIcon">🎉</div>
+            <div class="popup-title" id="customAlertTitle">সাফল্য!</div>
+            <div id="customAlertMessage" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 25px; text-align: center;"></div>
+            <button class="btn btn-primary" onclick="closeCustomAlert()">ঠিক আছে</button>
+        </div>
+    </div>
+    
+    <div class="popup-overlay" id="noticePopupOverlay">
+        <div class="popup-card">
+            <div class="popup-icon">📢</div>
+            <h2 class="popup-title" id="noticePopupTitle">নোটিস</h2>
+            <div class="popup-message" id="noticePopupMessage"></div>
+            <button class="btn btn-primary" id="noticePopupCloseBtn">বুঝেছি</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor("#0D0D0D");
+        tg.setBackgroundColor("#0D0D0D");
+
+        const defaultProfilePic = 'https://i.ibb.co/6yZk8h1/user.png';
+        const BOT_USERNAME = "Easy_Income_Official_Bot";
+        const APP_SHORT_NAME = "app"; 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGqjuNb921EZOuJgGTSVjR8DDgg1CkYgU",
+            authDomain: "easy-income-d0f70.firebaseapp.com",
+            projectId: "easy-income-d0f70",
+            storageBucket: "easy-income-d0f70.firebasestorage.app",
+            messagingSenderId: "153220030490",
+            appId: "1:153220030490:web:cbd2cca5af77b4534fb1a3",
+            measurementId: "G-GM0YLYNLJP"
+        };
+    
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let currentUser = null; 
+        let appConfig = null;
+        
+        const adNetworks = ['monetag', 'gigapub', 'adexora'];
+        let adIndex = 0;
+        
+        function loadMonetagSDK(zoneId) {
+            if (!zoneId || document.getElementById('monetag-sdk')) return;
+            try {
+                const script = document.createElement('script');
+                script.id = 'monetag-sdk';
+                script.src = '//libtl.com/sdk.js';
+                script.dataset.zone = zoneId;
+                script.dataset.sdk = `show_${zoneId}`;
+                document.head.appendChild(script);
+            } catch (e) { console.error("Error loading Monetag SDK:", e); }
+        }
+        
+        function callMonetagAd() {
+            return new Promise((resolve, reject) => {
+                if (!appConfig?.monetagZoneId) return reject("Monetag config not loaded.");
+                const funcName = `show_${appConfig.monetagZoneId}`;
+                if (typeof window[funcName] === 'function') {
+                    window[funcName]().then(resolve).catch(reject);
+                } else {
+                    reject("Ad function not found.");
+                }
+            });
+        }
+
+        function formatCurrency(points) {
+            const rate = appConfig?.dollarExchangeRate || 1;
+            return (points / rate).toFixed(2);
+        }
+
+        async function fetchAppConfig() {
+            try {
+                const doc = await db.collection('config').doc('appConfig').get();
+                if (doc.exists) {
+                    appConfig = doc.data();
+                    loadMonetagSDK(appConfig.monetagZoneId);
+                } else {
+                    appConfig = { standardAdPoints: 50, dailyTaskLimit: 15, dollarExchangeRate: 1, minWithdrawAmount: 1200, minReferralForWithdraw: 18, welcomeBonus: 50, paymentMethods: [], dynamicTasks: [], supportLinks: [] };
+                }
+            } catch (error) {
+                console.error("Error fetching app config:", error);
+            }
+        }
+        
+        function updateUI() {
+            if (!currentUser || !appConfig) return;
+
+            const balance = formatCurrency(currentUser.balance || 0);
+            
+            // Home Page
+            document.getElementById('homeProfilePic').src = currentUser.photo_url || defaultProfilePic;
+            document.getElementById('homeProfileName').firstChild.nodeValue = `${currentUser.first_name || 'User'} `;
+            document.getElementById('homeBalanceAmount').textContent = balance;
+            document.getElementById('homeDailyTasks').textContent = `${currentUser.dailyTasksCompleted || 0}/${appConfig.dailyTaskLimit || 0}`;
+            document.getElementById('homeTotalReferrals').textContent = currentUser.referredUsersCount || 0;
+            
+            const referralLink = `https://t.me/${BOT_USERNAME}?start=${btoa(currentUser.userId)}`;
+            document.getElementById('userReferralLink').textContent = referralLink;
+            
+            let refText = `প্রতি রেফারে ${formatCurrency(appConfig.referralBonus || 0)} TAKA বোনাস!`;
+            if ((appConfig.referralPercentage || 0) > 0) {
+                 refText += ` এবং ${appConfig.referralPercentage}% কমিশন।`;
+            }
+            document.getElementById('referralBonusText').textContent = refText;
+
+            // Tasks Page
+            document.getElementById('standardAdPoints').textContent = formatCurrency(appConfig.standardAdPoints || 0);
+            const limitReached = (currentUser.dailyTasksCompleted || 0) >= (appConfig.dailyTaskLimit || 0);
+            document.getElementById('startTaskBtn').disabled = limitReached;
+            document.getElementById('startTaskBtn').textContent = limitReached ? 'আজকের লিমিট শেষ' : 'বিজ্ঞাপন দেখুন';
+            renderDynamicTasks();
+
+            // Withdraw Page
+            document.getElementById('withdrawCurrentBalance').textContent = `${balance} TAKA`;
+            document.getElementById('minWithdrawAmountText').textContent = `${formatCurrency(appConfig.minWithdrawAmount || 0)} TAKA`;
+            document.getElementById('minReferralText').textContent = `${appConfig.minReferralForWithdraw || 0} জন`;
+            document.getElementById('withdrawAmount').placeholder = `ন্যূনতম ${formatCurrency(appConfig.minWithdrawAmount || 0)}`;
+            populatePaymentMethods();
+            renderWithdrawalHistory();
+            
+            // Support Page
+            document.getElementById('tutorialBtn').onclick = () => {
+                if(appConfig.popupVideoLink) tg.openLink(appConfig.popupVideoLink);
+            };
+            renderSupportLinks();
+        }
+        
+        function showCustomAlert(title, message, icon = '🎉') {
+            document.getElementById('customAlertTitle').textContent = title;
+            document.getElementById('customAlertMessage').textContent = message;
+            document.getElementById('customAlertIcon').textContent = icon;
+            document.getElementById('customAlertOverlay').style.display = 'flex';
+        }
+        function closeCustomAlert() {
+            document.getElementById('customAlertOverlay').style.display = 'none';
+        }
+
+        function showNoticePopup() {
+            if (!appConfig?.popupEnabled || sessionStorage.getItem('noticePopupSeen')) return;
+            document.getElementById('noticePopupTitle').textContent = appConfig.popupTitle || "নোটিস";
+            document.getElementById('noticePopupMessage').innerHTML = appConfig.popupMessage || "আমাদের অ্যাপে স্বাগতম!";
+            document.getElementById('noticePopupOverlay').style.display = 'flex';
+        }
+        document.getElementById('noticePopupCloseBtn').addEventListener('click', () => {
+            document.getElementById('noticePopupOverlay').style.display = 'none';
+            sessionStorage.setItem('noticePopupSeen', 'true');
+        });
+
+        async function rewardUser(points) {
+            if (!currentUser) return;
+            const today = new Date().toDateString();
+            const dailyTasksCompleted = (currentUser.lastTaskDate === today) ? (currentUser.dailyTasksCompleted || 0) : 0;
+
+            if (dailyTasksCompleted >= appConfig.dailyTaskLimit) {
+                showCustomAlert('লিমিট শেষ', 'আপনি আজকের সব টাস্ক সম্পন্ন করেছেন।', '⏰');
+                return;
+            }
+
+            try {
+                const userDocRef = db.collection('users').doc(currentUser.userId);
+                await db.runTransaction(async (transaction) => {
+                    const userDoc = await transaction.get(userDocRef);
+                    if (!userDoc.exists) throw "User not found";
+                    const userData = userDoc.data();
+                    
+                    const updates = {
+                        balance: firebase.firestore.FieldValue.increment(points),
+                        totalEarnings: firebase.firestore.FieldValue.increment(points),
+                        dailyTasksCompleted: (userData.lastTaskDate === today) ? firebase.firestore.FieldValue.increment(1) : 1,
+                        totalTasksCompleted: firebase.firestore.FieldValue.increment(1),
+                        lastTaskDate: today
+                    };
+                    transaction.update(userDocRef, updates);
+
+                    if (userData.referredBy && (appConfig.referralPercentage || 0) > 0) {
+                        const commission = Math.round(points * (appConfig.referralPercentage / 100));
+                        if (commission > 0) {
+                            const referrerDocRef = db.collection('users').doc(userData.referredBy);
+                            transaction.update(referrerDocRef, {
+                                balance: firebase.firestore.FieldValue.increment(commission),
+                                referralEarnings: firebase.firestore.FieldValue.increment(commission)
+                            });
+                        }
+                    }
+                });
+                showCustomAlert('সফল!', `আপনি ${formatCurrency(points)} TAKA পেয়েছেন!`, '💰');
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (error) {
+                console.error("Error rewarding user:", error);
+                showCustomAlert('ত্রুটি', 'পয়েন্ট যোগ করা যায়নি। আবার চেষ্টা করুন।', '❌');
+            }
+        }
+        
+        document.getElementById('startTaskBtn').addEventListener('click', function() {
+            const button = this;
+            button.disabled = true;
+            button.textContent = 'লোড হচ্ছে...';
+            
+            const networkToCall = adNetworks[adIndex];
+            let adPromise;
+            try {
+                switch(networkToCall) {
+                    case 'monetag': adPromise = callMonetagAd(); break;
+                    case 'gigapub': adPromise = window.showGiga ? window.showGiga() : Promise.reject("GigaPub not loaded"); break;
+                    case 'adexora': adPromise = window.showAdexora ? window.showAdexora() : Promise.reject("Adexora not loaded"); break;
+                    default: adPromise = Promise.reject("Unknown ad network");
+                }
+            } catch (err) { adPromise = Promise.reject(err); }
+
+            adIndex = (adIndex + 1) % adNetworks.length;
+
+            adPromise.then(() => {
+                rewardUser(appConfig.standardAdPoints);
+            }).catch(e => {
+                console.error(`${networkToCall} ad failed:`, e);
+                showCustomAlert('ত্রুটি', 'বিজ্ঞাপন লোড হয়নি। আবার চেষ্টা করুন।', '❌');
+            }).finally(() => {
+                setTimeout(() => {
+                    const limitReached = (currentUser.dailyTasksCompleted || 0) >= (appConfig.dailyTaskLimit || 0);
+                    if(!limitReached) {
+                        button.disabled = false;
+                        button.textContent = 'বিজ্ঞাপন দেখুন';
+                    }
+                }, 2000);
+            });
+        });
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const pageId = item.dataset.page;
+                pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        const copyAction = async () => {
+            const referralLink = document.getElementById('userReferralLink').textContent;
+            try {
+                await navigator.clipboard.writeText(referralLink);
+                showCustomAlert('সফল', 'রেফারেল লিঙ্ক কপি করা হয়েছে।', '📋');
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (err) {
+                showCustomAlert('ব্যর্থ', 'লিঙ্ক কপি করা যায়নি।', '❌');
+            }
+        };
+        document.getElementById('copyReferralLinkBtn').addEventListener('click', copyAction);
+        document.getElementById('copyReferralBtn').addEventListener('click', copyAction);
+
+        document.getElementById('shareOnTelegramBtn').addEventListener('click', () => {
+            const shareUrl = document.getElementById('userReferralLink').textContent;
+            const message = `Join this awesome app and earn! Use my referral link: ${shareUrl}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`);
+        });
+
+        async function initApp() {
+            await fetchAppConfig();
+            
+            const tgUser = tg.initDataUnsafe.user;
+            if (!tgUser || !tgUser.id) {
+                return showCustomAlert('ত্রুটি', 'টেলিগ্রাম ব্যবহারকারীর তথ্য পাওয়া যায়নি।', '❌');
+            }
+
+            const userId = String(tgUser.id);
+            const userDocRef = db.collection('users').doc(userId);
+
+            userDocRef.onSnapshot(async (doc) => {
+                if (doc.exists) {
+                    currentUser = doc.data();
+                } else {
+                    const newUser = {
+                        userId: userId, first_name: tgUser.first_name || '', last_name: tgUser.last_name || '',
+                        username: tgUser.username || '', photo_url: tgUser.photo_url || defaultProfilePic,
+                        balance: appConfig?.welcomeBonus || 0, totalEarnings: appConfig?.welcomeBonus || 0,
+                        dailyTasksCompleted: 0, totalTasksCompleted: 0, lastTaskDate: '',
+                        referredBy: null, referralEarnings: 0, referredUsersCount: 0,
+                        completedTasks: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    const startParam = tg.initDataUnsafe.start_param;
+                    if (startParam) {
+                        try {
+                            const referrerId = atob(startParam);
+                            if (referrerId && referrerId !== userId) {
+                                newUser.referredBy = referrerId;
+                                const referrerDocRef = db.collection('users').doc(referrerId);
+                                await db.runTransaction(async (t) => {
+                                    const updates = { referredUsersCount: firebase.firestore.FieldValue.increment(1) };
+                                    if (appConfig?.referralBonus > 0) {
+                                        updates.balance = firebase.firestore.FieldValue.increment(appConfig.referralBonus);
+                                        updates.referralEarnings = firebase.firestore.FieldValue.increment(appConfig.referralBonus);
+                                    }
+                                    t.update(referrerDocRef, updates);
+                                });
+                            }
+                        } catch(e) { console.error("Invalid start param:", e); }
+                    }
+
+                    await userDocRef.set(newUser);
+                    currentUser = newUser;
+                    if (appConfig?.welcomeBonus > 0) {
+                         showCustomAlert('স্বাগতম বোনাস!', `আপনি ${formatCurrency(appConfig.welcomeBonus)} TAKA বোনাস পেয়েছেন!`, '🎉');
+                    }
+                }
+                document.getElementById('loadingOverlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showNoticePopup();
+                }, 500);
+                updateUI();
+            }, (error) => {
+                console.error("Error listening to user document:", error);
+                showCustomAlert('ত্রুটি', 'ব্যবহারকারীর ডেটা লোড করা যায়নি।', '❌');
+            });
+        }
+        
+        function renderDynamicTasks() {
+            const list = document.getElementById('dynamicTasksList');
+            list.innerHTML = '';
+            if (!appConfig?.dynamicTasks || appConfig.dynamicTasks.length === 0) return;
+
+            const today = new Date().toDateString();
+            appConfig.dynamicTasks.forEach(task => {
+                const isCompleted = currentUser.completedTasks && (currentUser.completedTasks[task.id] === today || (task.type === 'one-time' && currentUser.completedTasks[task.id] === 'completed'));
+                
+                list.innerHTML += `
+                    <div class="card task-card">
+                        <div class="task-icon-lg">✈️</div>
+                        <h3>${task.name}</h3>
+                        <p>${task.description}</p>
+                        <div class="reward">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM12 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"></path></svg>
+                            রিওয়ার্ড: ${formatCurrency(task.points)} TAKA
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn btn-secondary" onclick="window.Telegram.WebApp.openLink('${task.link}')">চ্যানেল ওপেন</button>
+                            <button class="btn btn-green dynamic-task-btn" data-task-id="${task.id}" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'সম্পন্ন' : 'চেক ও ক্লেইম'}</button>
+                        </div>
+                    </div>`;
+            });
+            
+            document.querySelectorAll('.dynamic-task-btn').forEach(button => {
+                button.addEventListener('click', (e) => { /* Add claim logic here */ });
+            });
+        }
+
+        function populatePaymentMethods() {
+            const select = document.getElementById('paymentMethod');
+            select.innerHTML = '';
+            if (!appConfig?.paymentMethods || appConfig.paymentMethods.length === 0) {
+                select.innerHTML = '<option disabled selected>কোনো পেমেন্ট পদ্ধতি নেই</option>';
+                return;
+            }
+            appConfig.paymentMethods.forEach(method => {
+                select.innerHTML += `<option value="${method.id}">${method.name}</option>`;
+            });
+        }
+
+        async function renderWithdrawalHistory() {
+            const list = document.getElementById('withdrawHistoryList');
+            list.innerHTML = '';
+            const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.userId).orderBy('createdAt', 'desc').limit(10).get();
+            if (snapshot.empty) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">কোনো হিস্টরি নেই।</p>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const status = data.status.toLowerCase();
+                list.innerHTML += `
+                    <li class="history-item">
+                        <div class="history-details">
+                            <h4>${formatCurrency(data.amount)} TAKA - ${data.paymentMethodName}</h4>
+                            <p>${new Date(data.createdAt.toDate()).toLocaleString()}</p>
+                        </div>
+                        <span class="status-badge status-${status}">${data.status}</span>
+                    </li>`;
+            });
+        }
+
+        function renderSupportLinks() {
+            const grid = document.getElementById('supportLinksGrid');
+            grid.innerHTML = '';
+            if (!appConfig?.supportLinks || appConfig.supportLinks.length === 0) return;
+            
+            appConfig.supportLinks.forEach(link => {
+                grid.innerHTML += `
+                    <div class="support-link-item" onclick="window.Telegram.WebApp.openLink('${link.link}')">
+                        <div class="icon">${link.icon === 'telegram' ? '✈️' : '❓'}</div>
+                        <h4>${link.name}</h4>
+                        <p>${link.description || ''}</p>
+                    </div>`;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
