@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💸 Easy Income Admin</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-bg: #FFFFFF;
+            --secondary-bg: #F7F9FC;
+            --border-color: #E1E8ED;
+            --text-primary: #14171A;
+            --text-secondary: #657786;
+            
+            --color-blue: #1D9BF0;
+            --color-green: #00BA7C;
+            --color-red: #E0245E;
+            --color-yellow: #FFAD1F;
+            --primary-theme-color: #00A3FF; /* Matching user panel's blue */
+        }
+        
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Login Page */
+        #login-page {
+            width: 100%;
+            max-width: 360px;
+            margin: auto;
+            padding: 25px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        #login-page h1 { text-align: center; color: var(--primary-theme-color); }
+        #login-page input {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: var(--secondary-bg);
+            border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 16px;
+        }
+        #login-error { color: var(--color-red); text-align: center; display: none; margin-bottom: 15px; }
+        
+        /* Admin App */
+        #admin-app { display: none; width: 100%; flex-direction: column; }
+        
+        header {
+            display: flex; justify-content: space-between; align-items: center; background: var(--primary-bg);
+            padding: 15px 25px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;
+        }
+        header h1 { margin: 0; font-size: 24px; color: var(--primary-theme-color); }
+        
+        nav {
+            display: flex; flex-wrap: wrap; background: var(--primary-bg);
+            border-bottom: 1px solid var(--border-color); position: sticky; top: 69px; z-index: 99;
+        }
+        nav button {
+            padding: 15px 20px; background: none; border: none; border-bottom: 3px solid transparent;
+            color: var(--text-secondary); font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        nav button.active { color: var(--primary-theme-color); border-bottom-color: var(--primary-theme-color); }
+        
+        main { padding: 25px; background-color: var(--secondary-bg); min-height: calc(100vh - 130px); }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 0; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .form-section { background: var(--primary-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); }
+        input[type="text"], input[type="number"], input[type="url"], select, textarea {
+            width: 100%; padding: 12px; background: var(--primary-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; color: var(--text-primary); font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary-theme-color); outline: none; box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.1); }
+        textarea { min-height: 100px; }
+        
+        button {
+            padding: 10px 18px; border-radius: 20px; border: 1px solid transparent;
+            font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+        }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn { background: var(--secondary-bg); color: var(--text-primary); border-color: var(--border-color); }
+        .btn:hover { background-color: var(--border-color); }
+        .btn-primary { background: var(--primary-theme-color); color: white; }
+        .btn-primary:hover { background: #0082cc; }
+        .btn-success { background: var(--color-green); color: white; }
+        .btn-danger { background: var(--color-red); color: white; }
+        .btn-info { background: var(--color-blue); color: white; }
+        
+        .list-item {
+            display: flex; flex-direction: column; gap: 5px; background: var(--secondary-bg);
+            padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color);
+        }
+        .list-item-header { display: flex; justify-content: space-between; align-items: center; }
+        .list-item-info { font-size: 14px; }
+        .list-item-info strong { color: var(--text-primary); }
+        .list-item-info span { color: var(--text-secondary); font-size: 12px; }
+        .list-item-details { font-size: 12px; color: var(--text-secondary); word-break: break-all; }
+
+        .table-container { overflow-x: auto; }
+        table {
+            width: 100%; border-collapse: collapse; background: var(--primary-bg);
+            border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        th { background: var(--secondary-bg); font-size: 14px; color: var(--text-secondary); text-transform: uppercase; }
+        td { font-size: 14px; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);
+            z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal-box { background: var(--primary-bg); border-radius: 16px; padding: 25px; max-width: 450px; width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-page">
+        <h1>💸 Easy Income Admin</h1>
+        <input type="email" id="login-email" placeholder="Admin Email">
+        <input type="password" id="login-password" placeholder="Password">
+        <p id="login-error">Invalid email or password.</p>
+        <button id="login-button" class="btn-primary" style="width:100%; padding: 12px;">Login</button>
+    </div>
+
+    <div id="admin-app">
+        <header>
+            <h1>💸 Easy Income Admin</h1>
+            <button id="logout-button" class="btn-danger">Logout</button>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" data-page="page-dashboard">Dashboard</button>
+            <button class="nav-btn" data-page="page-settings">App Settings</button>
+            <button class="nav-btn" data-page="page-manage-lists">Manage Lists</button>
+            <button class="nav-btn" data-page="page-withdrawals">Withdrawals</button>
+            <button class="nav-btn" data-page="page-users">Users</button>
+        </nav>
+
+        <main>
+            <div id="page-dashboard" class="page active">
+                <h2>Dashboard</h2>
+                <div class="form-grid">
+                    <div class="form-section" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary);">Pending Withdrawals</h3>
+                        <p id="stat-pending-withdrawals" style="font-size: 36px; font-weight: 700; color: var(--color-yellow); margin: 10px 0;">0</p>
+                    </div>
+                    <div class="form-section" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary);">Total Users</h3>
+                        <p id="stat-total-users" style="font-size: 36px; font-weight: 700; color: var(--color-blue); margin: 10px 0;">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-settings" class="page">
+                <h2>App Settings</h2>
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h3>Monetization</h3>
+                        <div class="form-group">
+                            <label for="config-monetagZoneId">Monetag Zone ID</label>
+                            <input type="text" id="config-monetagZoneId">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-standardAdPoints">Standard Ad Reward (TAKA)</label>
+                            <input type="number" id="config-standardAdPoints" step="0.01">
+                        </div>
+                         <div class="form-group">
+                            <label for="config-dailyTaskLimit">Daily Ad Task Limit</label>
+                            <input type="number" id="config-dailyTaskLimit">
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <h3>Bonuses</h3>
+                         <div class="form-group">
+                            <label for="config-welcomeBonus">Welcome Bonus (TAKA)</label>
+                            <input type="number" id="config-welcomeBonus" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-dailyCheckInBonus">Daily Check-in Bonus (TAKA)</label>
+                            <input type="number" id="config-dailyCheckInBonus" step="0.01">
+                        </div>
+                    </div>
+                     <div class="form-section">
+                        <h3>Referrals</h3>
+                        <div class="form-group">
+                            <label for="config-referralBonus">One-time Join Bonus (TAKA)</label>
+                            <input type="number" id="config-referralBonus" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-referralPercentage">Task Commission (%)</label>
+                            <input type="number" id="config-referralPercentage">
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <h3>Withdrawals</h3>
+                        <div class="form-group">
+                            <label for="config-minWithdrawAmount">Minimum Withdraw (TAKA)</label>
+                            <input type="number" id="config-minWithdrawAmount" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="config-minReferralForWithdraw">Min Referrals to Withdraw</label>
+                            <input type="number" id="config-minReferralForWithdraw">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section" style="grid-column: 1 / -1;">
+                        <h3>Info Popup Settings</h3>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label for="config-popupEnabled">Enable Popup</label>
+                                <select id="config-popupEnabled">
+                                    <option value="true">Yes, Show Popup</option>
+                                    <option value="false">No, Hide Popup</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="config-popupTitle">Popup Title</label>
+                                <input type="text" id="config-popupTitle">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-popupMessage">Popup Message (Use \n for new lines)</label>
+                            <textarea id="config-popupMessage" rows="5"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="config-popupVideoLink">Popup "How to Work" Video Link</label>
+                            <input type="url" id="config-popupVideoLink" placeholder="https://t.me/...">
+                        </div>
+                    </div>
+                </div>
+                <button id="save-settings-btn" class="btn-primary" style="margin-top: 20px; padding: 12px 25px;">Save All Settings</button>
+            </div>
+
+            <div id="page-manage-lists" class="page">
+                <h2>Manage Lists</h2>
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h3>Bonus Tasks</h3>
+                        <div id="dynamic-tasks-list"></div>
+                        <form id="form-add-task">
+                            <h4 style="margin-top: 20px;">Add New Bonus Task</h4>
+                            <div class="form-group">
+                                <label>Unique ID (e.g., join_channel)</label>
+                                <input type="text" id="task-id" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Name (e.g., চ্যানেলে জয়েন)</label>
+                                <input type="text" id="task-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" id="task-description" required>
+                            </div>
+                             <div class="form-group">
+                                <label>Reward (TAKA)</label>
+                                <input type="number" id="task-points" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Link (URL)</label>
+                                <input type="url" id="task-link" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Timer (seconds)</label>
+                                <input type="number" id="task-timer" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Task Type</label>
+                                <select id="task-type">
+                                    <option value="daily">Daily</option>
+                                    <option value="one-time">One-Time</option>
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                <label>Icon (SVG Path Data)</label>
+                                <input type="text" id="task-icon-path" placeholder="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2...">
+                            </div>
+                            <button type="submit" class="btn-info" style="margin-top: 15px;">Add Task</button>
+                        </form>
+                    </div>
+                     <div class="form-section">
+                        <h3>Support Links</h3>
+                        <div id="support-links-list"></div>
+                        <form id="form-add-link">
+                            <h4 style="margin-top: 20px;">Add New Support Link</h4>
+                            <div class="form-group"><label>Name</label><input type="text" id="link-name" required></div>
+                            <div class="form-group"><label>Description</label><input type="text" id="link-description"></div>
+                            <div class="form-group"><label>Link (URL)</label><input type="url" id="link-link" required></div>
+                            <div class="form-group"><label>Icon (SVG Path Data)</label><input type="text" id="link-icon-path" placeholder="M9.01 14H2v2h7.01v3L13 15l-3.99-4v3z..."></div>
+                            <button type="submit" class="btn-info" style="margin-top: 15px;">Add Link</button>
+                        </form>
+                    </div>
+                    <div class="form-section">
+                        <h3>Payment Methods</h3>
+                        <div id="payment-methods-list"></div>
+                        <form id="form-add-method">
+                            <h4 style="margin-top: 20px;">Add New Method</h4>
+                            <div class="form-group"><label>Unique ID (e.g., bkash)</label><input type="text" id="method-id" required></div>
+                            <div class="form-group"><label>Name (e.g., বিকাশ)</label><input type="text" id="method-name" required></div>
+                            <button type="submit" class="btn-info" style="margin-top: 15px;">Add Method</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-withdrawals" class="page">
+                <h2>Pending Withdrawals</h2>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>User ID</th><th>Amount (TAKA)</th><th>Method</th><th>Details</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="withdrawals-table-body"></tbody>
+                    </table>
+                </div>
+
+                <h2 style="margin-top: 40px;">Withdrawal History (Last 50)</h2>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>User ID</th><th>Amount (TAKA)</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th></tr></thead>
+                        <tbody id="withdrawals-history-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="page-users" class="page">
+                <h2>User Management</h2>
+                <div class="form-section" style="margin-bottom: 20px;">
+                    <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 0;">
+                        <input type="text" id="user-search" placeholder="Search by User ID...">
+                        <button id="user-search-btn" class="btn">Search</button>
+                    </div>
+                </div>
+                <div id="user-search-results" style="margin-bottom: 20px;"></div>
+
+                <h2>All Users</h2>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>#</th><th>User ID</th><th>Name</th><th>Balance (TAKA)</th><th>Referrals</th><th>Actions</th></tr></thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button id="users-prev-btn" class="btn">Previous</button>
+                    <span id="users-page-info" style="margin: 0 15px; color: var(--text-secondary);">Page 1</span>
+                    <button id="users-next-btn" class="btn">Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="editUserModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header"><h3>Edit User</h3><button onclick="closeEditUserModal()">&times;</button></div>
+            <div class="modal-body">
+                <p><strong>User ID:</strong> <span id="modal-user-id">...</span></p>
+                <p><strong>Name:</strong> <span id="modal-user-name">...</span></p>
+                <p><strong>Balance:</strong> <span id="modal-user-balance">...</span> TAKA</p>
+                <div class="form-group"><label>Add/Remove Balance (TAKA)</label><input type="number" id="modal-edit-points" step="0.01"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeEditUserModal()">Cancel</button>
+                <button class="btn-success" id="modal-save-btn" onclick="saveUserEdits()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ####################################################################
+        // ################## START: FIREBASE CONFIG ##########################
+        //            THIS MUST MATCH YOUR USER PANEL'S CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGqjuNb921EZOuJgGTSVjR8DDgg1CkYgU",
+            authDomain: "easy-income-d0f70.firebaseapp.com",
+            projectId: "easy-income-d0f70",
+            storageBucket: "easy-income-d0f70.firebasestorage.app",
+            messagingSenderId: "153220030490",
+            appId: "1:153220030490:web:cbd2cca5af77b4534fb1a3",
+            measurementId: "G-GM0YLYNLJP"
+        };
+        // ################### END: FIREBASE CONFIG ###########################
+        // ####################################################################
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Global state & DOM Elements
+        let currentConfig = {};
+        let lastVisibleUser = null, firstVisibleUser = null, userPageHistory = [], currentPageNum = 1;
+        const USERS_PER_PAGE = 20;
+        const loginPage = document.getElementById('login-page'), adminApp = document.getElementById('admin-app');
+
+        // --- Authentication ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginPage.style.display = 'none';
+                adminApp.style.display = 'flex';
+                loadAllData();
+            } else {
+                loginPage.style.display = 'block';
+                adminApp.style.display = 'none';
+            }
+        });
+        document.getElementById('login-button').addEventListener('click', () => {
+            auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value)
+                .catch(err => document.getElementById('login-error').textContent = err.message);
+        });
+        document.getElementById('logout-button').addEventListener('click', () => auth.signOut());
+
+        // --- Navigation ---
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
+            document.querySelector('.nav-btn.active').classList.remove('active');
+            document.querySelector('.page.active').classList.remove('active');
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.page).classList.add('active');
+        }));
+
+        // --- Data Loading & Saving ---
+        function loadAllData() {
+            loadAppConfig();
+            loadPendingWithdrawals();
+            loadWithdrawalHistory();
+            loadUsersPage('first');
+            loadDashboardStats();
+        }
+
+        async function loadAppConfig() {
+            try {
+                const doc = await db.collection('config').doc('appConfig').get();
+                if (!doc.exists) throw new Error("appConfig document not found!");
+                currentConfig = doc.data();
+                
+                // Populate settings form
+                document.getElementById('config-monetagZoneId').value = currentConfig.monetagZoneId || '';
+                document.getElementById('config-standardAdPoints').value = currentConfig.standardAdPoints || 0;
+                document.getElementById('config-dailyTaskLimit').value = currentConfig.dailyTaskLimit || 0;
+                document.getElementById('config-welcomeBonus').value = currentConfig.welcomeBonus || 0;
+                document.getElementById('config-dailyCheckInBonus').value = currentConfig.dailyCheckInBonus || 0;
+                document.getElementById('config-referralBonus').value = currentConfig.referralBonus || 0;
+                document.getElementById('config-referralPercentage').value = currentConfig.referralPercentage || 0;
+                document.getElementById('config-minWithdrawAmount').value = currentConfig.minWithdrawAmount || 0;
+                document.getElementById('config-minReferralForWithdraw').value = currentConfig.minReferralForWithdraw || 0;
+                document.getElementById('config-popupEnabled').value = String(currentConfig.popupEnabled) === 'false' ? 'false' : 'true';
+                document.getElementById('config-popupTitle').value = currentConfig.popupTitle || '';
+                document.getElementById('config-popupMessage').value = currentConfig.popupMessage || '';
+                document.getElementById('config-popupVideoLink').value = currentConfig.popupVideoLink || '';
+
+                renderLists();
+            } catch (e) { console.error("Error loading config:", e); alert(e.message); }
+        }
+        
+        document.getElementById('save-settings-btn').addEventListener('click', async (e) => {
+            const btn = e.target;
+            btn.disabled = true;
+            btn.textContent = "Saving...";
+            
+            const settings = {
+                monetagZoneId: document.getElementById('config-monetagZoneId').value.trim(),
+                standardAdPoints: parseFloat(document.getElementById('config-standardAdPoints').value) || 0,
+                dailyTaskLimit: parseInt(document.getElementById('config-dailyTaskLimit').value) || 0,
+                welcomeBonus: parseFloat(document.getElementById('config-welcomeBonus').value) || 0,
+                dailyCheckInBonus: parseFloat(document.getElementById('config-dailyCheckInBonus').value) || 0,
+                referralBonus: parseFloat(document.getElementById('config-referralBonus').value) || 0,
+                referralPercentage: parseInt(document.getElementById('config-referralPercentage').value) || 0,
+                minWithdrawAmount: parseFloat(document.getElementById('config-minWithdrawAmount').value) || 0,
+                minReferralForWithdraw: parseInt(document.getElementById('config-minReferralForWithdraw').value) || 0,
+                popupEnabled: document.getElementById('config-popupEnabled').value === 'true',
+                popupTitle: document.getElementById('config-popupTitle').value,
+                popupMessage: document.getElementById('config-popupMessage').value,
+                popupVideoLink: document.getElementById('config-popupVideoLink').value
+            };
+            
+            try {
+                await db.collection('config').doc('appConfig').set(settings, { merge: true });
+                alert("Settings saved!");
+            } catch (err) { alert("Error saving: " + err.message); }
+            finally { btn.disabled = false; btn.textContent = "Save All Settings"; }
+        });
+
+        // --- Manage Lists ---
+        function renderLists() {
+            // Render Dynamic Tasks
+            const tasksList = document.getElementById('dynamic-tasks-list');
+            tasksList.innerHTML = '';
+            (currentConfig.dynamicTasks || []).forEach((task, index) => {
+                tasksList.innerHTML += `<div class="list-item">
+                    <div class="list-item-header">
+                        <div class="list-item-info"><strong>${task.name}</strong> <span>(${task.points} TAKA) [${task.type}]</span></div>
+                        <button class="btn-danger" onclick="removeListItem('dynamicTasks', ${index})">&times;</button>
+                    </div>
+                    <div class="list-item-details">ID: ${task.id} | Timer: ${task.timer}s | Link: ${task.link}</div>
+                </div>`;
+            });
+
+            // Render Support Links
+            const linksList = document.getElementById('support-links-list');
+            linksList.innerHTML = '';
+            (currentConfig.supportLinks || []).forEach((link, index) => {
+                linksList.innerHTML += `<div class="list-item">
+                     <div class="list-item-header">
+                        <div class="list-item-info"><strong>${link.name}</strong></div>
+                        <button class="btn-danger" onclick="removeListItem('supportLinks', ${index})">&times;</button>
+                    </div>
+                    <div class="list-item-details">Desc: ${link.description || 'N/A'}</div>
+                </div>`;
+            });
+
+            // Render Payment Methods
+            const methodsList = document.getElementById('payment-methods-list');
+            methodsList.innerHTML = '';
+            (currentConfig.paymentMethods || []).forEach((method, index) => {
+                methodsList.innerHTML += `<div class="list-item">
+                    <div class="list-item-header">
+                        <div class="list-item-info"><strong>${method.name}</strong> <span>(ID: ${method.id})</span></div>
+                        <button class="btn-danger" onclick="removeListItem('paymentMethods', ${index})">&times;</button>
+                    </div>
+                </div>`;
+            });
+        }
+        
+        document.getElementById('form-add-task').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newTask = {
+                id: document.getElementById('task-id').value.trim(),
+                name: document.getElementById('task-name').value,
+                description: document.getElementById('task-description').value,
+                points: parseFloat(document.getElementById('task-points').value) || 0,
+                link: document.getElementById('task-link').value,
+                timer: parseInt(document.getElementById('task-timer').value) || 0,
+                type: document.getElementById('task-type').value,
+                icon_path: document.getElementById('task-icon-path').value,
+            };
+            if ((currentConfig.dynamicTasks || []).find(t => t.id === newTask.id)) return alert("Error: Task ID must be unique.");
+            addListItem('dynamicTasks', newTask, e.target);
+        });
+
+        document.getElementById('form-add-link').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addListItem('supportLinks', {
+                name: document.getElementById('link-name').value,
+                description: document.getElementById('link-description').value,
+                link: document.getElementById('link-link').value,
+                icon_path: document.getElementById('link-icon-path').value,
+            }, e.target);
+        });
+        
+        document.getElementById('form-add-method').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newMethod = {
+                id: document.getElementById('method-id').value.trim(),
+                name: document.getElementById('method-name').value,
+            };
+            if ((currentConfig.paymentMethods || []).find(m => m.id === newMethod.id)) return alert("Error: Method ID must be unique.");
+            addListItem('paymentMethods', newMethod, e.target);
+        });
+
+        async function addListItem(listName, newItem, formElement) {
+            const updatedList = [...(currentConfig[listName] || []), newItem];
+            try {
+                await db.collection('config').doc('appConfig').update({ [listName]: updatedList });
+                alert('Item added!');
+                formElement.reset();
+                loadAppConfig();
+            } catch (err) { alert(err.message); }
+        }
+
+        async function removeListItem(listName, index) {
+            if (!confirm('Remove this item?')) return;
+            const updatedList = [...(currentConfig[listName] || [])];
+            updatedList.splice(index, 1);
+            try {
+                await db.collection('config').doc('appConfig').update({ [listName]: updatedList });
+                alert('Item removed!');
+                loadAppConfig();
+            } catch (err) { alert(err.message); }
+        }
+
+        // --- Withdrawals & Users ---
+        async function loadPendingWithdrawals() {
+            const snapshot = await db.collection('withdrawals').where('status', '==', 'Pending').orderBy('createdAt', 'desc').get();
+            document.getElementById('stat-pending-withdrawals').textContent = snapshot.size;
+            const tableBody = document.getElementById('withdrawals-table-body');
+            tableBody.innerHTML = snapshot.empty ? '<tr><td colspan="6">No pending requests.</td></tr>' : '';
+            snapshot.forEach(doc => {
+                const w = doc.data();
+                tableBody.innerHTML += `<tr><td>${w.userId}</td><td>${w.amount}</td><td>${w.paymentMethodName}</td><td>${w.paymentAddress}</td><td>${new Date(w.createdAt.toDate()).toLocaleString()}</td>
+                    <td><button class="btn-success" onclick="handleWithdrawal('${doc.id}', 'Approved')">Approve</button> <button class="btn-danger" onclick="handleWithdrawal('${doc.id}', 'Rejected')">Reject</button></td></tr>`;
+            });
+        }
+        
+        async function loadWithdrawalHistory() {
+            const snapshot = await db.collection('withdrawals').where('status', '!=', 'Pending').orderBy('status').orderBy('createdAt', 'desc').limit(50).get();
+            const tableBody = document.getElementById('withdrawals-history-table-body');
+            tableBody.innerHTML = snapshot.empty ? '<tr><td colspan="6">No history.</td></tr>' : '';
+            snapshot.forEach(doc => {
+                const w = doc.data();
+                tableBody.innerHTML += `<tr><td>${w.userId}</td><td>${w.amount}</td><td>${w.paymentMethodName}</td><td>${w.paymentAddress}</td><td>${new Date(w.createdAt.toDate()).toLocaleString()}</td>
+                    <td><span style="color: ${w.status === 'Approved' ? 'green' : 'red'}">${w.status}</span></td></tr>`;
+            });
+        }
+
+        async function handleWithdrawal(docId, newStatus) {
+            if (!confirm(`Set status to '${newStatus}'?`)) return;
+            const withdrawalRef = db.collection('withdrawals').doc(docId);
+            try {
+                if (newStatus === 'Rejected') {
+                    const doc = await withdrawalRef.get();
+                    const data = doc.data();
+                    const userRef = db.collection('users').doc(data.userId);
+                    await db.runTransaction(async t => {
+                        t.update(userRef, { balance: firebase.firestore.FieldValue.increment(data.amount) });
+                        t.update(withdrawalRef, { status: newStatus });
+                    });
+                    alert('Rejected & Refunded.');
+                } else {
+                    await withdrawalRef.update({ status: newStatus });
+                    alert('Approved.');
+                }
+                loadPendingWithdrawals(); loadWithdrawalHistory();
+            } catch (e) { alert(e.message); }
+        }
+        
+        // User management functions (search, pagination, edit) can be reused from the template
+        // ... (The comprehensive user management script from the template would go here)
+        async function loadDashboardStats() { 
+            const snapshot = await db.collection('users').count().get();
+            document.getElementById('stat-total-users').textContent = snapshot.data().count;
+        }
+
+        // Functions for User Modal, Search, and Pagination are largely reusable
+        document.getElementById('users-prev-btn').addEventListener('click', () => loadUsersPage('prev'));
+        document.getElementById('users-next-btn').addEventListener('click', () => loadUsersPage('next'));
+        async function loadUsersPage(direction = 'first') { /* ... Code from template ... */ }
+        function renderUsersTable(snapshot, serialStart) { /* ... Code from template, adjust field names ... */ }
+        document.getElementById('user-search-btn').addEventListener('click', async () => { /* ... Code from template ... */ });
+        function showEditUserModal(userId, name, balance) { /* ... Code from template ... */ }
+        function closeEditUserModal() { document.getElementById('editUserModal').style.display = 'none'; }
+        async function saveUserEdits() { /* ... Code from template ... */ }
+        async function updateUserPoints(userId, amount) { /* ... Code from template ... */ }
+
+        // Implementing the reusable functions with correct field names
+        async function loadUsersPage(direction = 'first') { 
+            const tableBody = document.getElementById('users-table-body');
+            const pageInfo = document.getElementById('users-page-info');
+            const prevBtn = document.getElementById('users-prev-btn'), nextBtn = document.getElementById('users-next-btn');
+            let query;
+            try {
+                if (direction === 'first') { query = db.collection('users').orderBy('userId').limit(USERS_PER_PAGE); currentPageNum = 1; userPageHistory = []; } 
+                else if (direction === 'next') { if (!lastVisibleUser) return; userPageHistory.push(firstVisibleUser); query = db.collection('users').orderBy('userId').startAfter(lastVisibleUser).limit(USERS_PER_PAGE); currentPageNum++; } 
+                else if (direction === 'prev') { if (userPageHistory.length === 0) return; const prev = userPageHistory.pop(); query = db.collection('users').orderBy('userId').startAt(prev).limit(USERS_PER_PAGE); currentPageNum--; }
+                const snapshot = await query.get();
+                if (snapshot.empty) { 
+                    if(direction === 'first') tableBody.innerHTML = '<tr><td colspan="6">No users found.</td></tr>';
+                    nextBtn.disabled = true; 
+                } else {
+                    firstVisibleUser = snapshot.docs[0];
+                    lastVisibleUser = snapshot.docs[snapshot.docs.length - 1];
+                    renderUsersTable(snapshot, (currentPageNum - 1) * USERS_PER_PAGE + 1);
+                    nextBtn.disabled = snapshot.size < USERS_PER_PAGE;
+                }
+                prevBtn.disabled = userPageHistory.length === 0;
+                pageInfo.textContent = `Page ${currentPageNum}`;
+            } catch (e) { console.error(e); tableBody.innerHTML = `<tr><td colspan="6">Error: ${e.message}</td></tr>`; }
+         }
+
+        function renderUsersTable(snapshot, startNum) {
+            const tableBody = document.getElementById('users-table-body');
+            tableBody.innerHTML = ''; let count = startNum;
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A';
+                const safeName = fullName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                tableBody.innerHTML += `
+                    <tr><td>${count++}</td><td>${user.userId}</td><td>${fullName}</td>
+                        <td>${(user.balance || 0).toFixed(2)}</td><td>${user.referredUsersCount || 0}</td>
+                        <td><button class="btn-info" onclick="showEditUserModal('${user.userId}', '${safeName}', '${user.balance || 0}')">Edit</button></td>
+                    </tr>`;
+            });
+        }
+        
+        document.getElementById('user-search-btn').addEventListener('click', async () => { 
+            const query = document.getElementById('user-search').value.trim(); if (!query) return;
+            const resultsDiv = document.getElementById('user-search-results'); resultsDiv.innerHTML = 'Searching...';
+            try {
+                const doc = await db.collection('users').doc(query).get();
+                if (!doc.exists) return resultsDiv.innerHTML = '<p style="color:red">User not found.</p>';
+                const user = doc.data();
+                resultsDiv.innerHTML = `<div class="form-section"><h4>${user.first_name || 'N/A'} (${user.userId})</h4>
+                    <p>Balance: <strong>${(user.balance || 0).toFixed(2)}</strong> TAKA | Referrals: ${user.referredUsersCount || 0}</p>
+                    <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="user-edit-points-search" step="0.01" placeholder="Add/Remove Balance">
+                        <button class="btn-success" onclick="updateUserPoints('${user.userId}', document.getElementById('user-edit-points-search').value)">Update</button>
+                    </div></div>`;
+            } catch (e) { resultsDiv.innerHTML = `<p style="color:red">${e.message}</p>`; }
+        });
+        
+        function showEditUserModal(userId, name, balance) { 
+            document.getElementById('modal-user-id').textContent = userId;
+            document.getElementById('modal-user-name').textContent = name;
+            document.getElementById('modal-user-balance').textContent = parseFloat(balance).toFixed(2);
+            document.getElementById('modal-edit-points').value = '';
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+        
+        async function saveUserEdits() { 
+             const userId = document.getElementById('modal-user-id').textContent;
+             const amount = document.getElementById('modal-edit-points').value;
+             await updateUserPoints(userId, amount, true);
+        }
+
+        async function updateUserPoints(userId, amountStr, closeModal = false) { 
+             const amount = parseFloat(amountStr);
+             if (!userId || isNaN(amount)) return alert("Invalid amount.");
+             if (!confirm(`Add ${amount} TAKA to user ${userId}?`)) return;
+             
+             try {
+                await db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(amount) });
+                alert('User balance updated!');
+                if(closeModal) closeEditUserModal();
+                loadUsersPage('first'); // Reload current user view
+                if(document.getElementById('user-search').value === userId) document.getElementById('user-search-btn').click(); // Reload search if active
+             } catch (e) { alert(e.message); }
+        }
+
+    </script>
+</body>
+</html>
