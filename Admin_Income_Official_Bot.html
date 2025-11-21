@@ -21,7 +21,7 @@
             --color-green: #00BA7C;
             --color-red: #E0245E;
             --color-yellow: #FFAD1F;
-            --primary-theme-color: #00A3FF; /* Matching user panel's blue */
+            --primary-theme-color: #00A3FF; 
         }
         
         * { box-sizing: border-box; }
@@ -387,13 +387,13 @@
         // ################## START: FIREBASE CONFIG ##########################
         //            THIS MUST MATCH YOUR USER PANEL'S CONFIG
         const firebaseConfig = {
-  apiKey: "AIzaSyBQJ1ZvyUCrPkcU3lqWmq2pXFlyB3NTUmI",
-  authDomain: "nagad-tasker-8c077.firebaseapp.com",
-  projectId: "nagad-tasker-8c077",
-  storageBucket: "nagad-tasker-8c077.firebasestorage.app",
-  messagingSenderId: "716325210950",
-  appId: "1:716325210950:web:eed28b21f562a00742f347",
-  measurementId: "G-QDVLMLHX8X"
+            apiKey: "AIzaSyBGqjuNb921EZOuJgGTSVjR8DDgg1CkYgU",
+            authDomain: "easy-income-d0f70.firebaseapp.com",
+            projectId: "easy-income-d0f70",
+            storageBucket: "easy-income-d0f70.firebasestorage.app",
+            messagingSenderId: "153220030490",
+            appId: "1:153220030490:web:cbd2cca5af77b4534fb1a3",
+            measurementId: "G-GM0YLYNLJP"
         };
         // ################### END: FIREBASE CONFIG ###########################
         // ####################################################################
@@ -637,24 +637,18 @@
                 loadPendingWithdrawals(); loadWithdrawalHistory();
             } catch (e) { alert(e.message); }
         }
-        
-        // User management functions (search, pagination, edit) can be reused from the template
-        // ... (The comprehensive user management script from the template would go here)
-        async function loadDashboardStats() { 
-            const snapshot = await db.collection('users').count().get();
-            document.getElementById('stat-total-users').textContent = snapshot.data().count;
-        }
 
-        // Functions for User Modal, Search, and Pagination are largely reusable
-        document.getElementById('users-prev-btn').addEventListener('click', () => loadUsersPage('prev'));
-        document.getElementById('users-next-btn').addEventListener('click', () => loadUsersPage('next'));
-        async function loadUsersPage(direction = 'first') { /* ... Code from template ... */ }
-        function renderUsersTable(snapshot, serialStart) { /* ... Code from template, adjust field names ... */ }
-        document.getElementById('user-search-btn').addEventListener('click', async () => { /* ... Code from template ... */ });
-        function showEditUserModal(userId, name, balance) { /* ... Code from template ... */ }
-        function closeEditUserModal() { document.getElementById('editUserModal').style.display = 'none'; }
-        async function saveUserEdits() { /* ... Code from template ... */ }
-        async function updateUserPoints(userId, amount) { /* ... Code from template ... */ }
+        // FIXED FUNCTION: Using .get() instead of .count() for compatibility
+        async function loadDashboardStats() { 
+            try {
+                // Using .get().then(snap => snap.size) to ensure compatibility with SDK 9.6.1
+                const snapshot = await db.collection('users').get();
+                document.getElementById('stat-total-users').textContent = snapshot.size;
+            } catch (error) {
+                console.error("Error loading user stats:", error);
+                document.getElementById('stat-total-users').textContent = "Error";
+            }
+        }
 
         // Implementing the reusable functions with correct field names
         async function loadUsersPage(direction = 'first') { 
@@ -739,6 +733,10 @@
                 if(document.getElementById('user-search').value === userId) document.getElementById('user-search-btn').click(); // Reload search if active
              } catch (e) { alert(e.message); }
         }
+        
+        // Modal Close
+        document.getElementById('users-prev-btn').addEventListener('click', () => loadUsersPage('prev'));
+        document.getElementById('users-next-btn').addEventListener('click', () => loadUsersPage('next'));
 
     </script>
 </body>
